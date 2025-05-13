@@ -32,7 +32,16 @@ def convert(input: str, output: str|None=None) -> str:
 
 # MARK: private functions
 
-def _make_ico(image: Image, output_path: Path):
+def _make_ico(orig_image: Image, output_path: Path):
+    w, h = orig_image.size
+    if w == h:
+        image = orig_image
+    elif w > h:
+        image = Image.new('RGBA', size=(w, w), color=(0, 0, 0, 0))
+        image.paste(orig_image, (0, (w - h)>>1))
+    else:
+        image = Image.new('RGBA', size=(h, h), color=(0, 0, 0, 0))
+        image.paste(orig_image, ((h - w)>>1, 0))
     images = []
     for size in ICO_SIZES:
         images.append(image.resize((size, size), Image.Resampling.LANCZOS))
