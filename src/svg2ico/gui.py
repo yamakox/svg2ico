@@ -3,11 +3,27 @@ import wx.lib.scrolledpanel as scrolled
 from .converter import convert
 from PIL import Image
 from pathlib import Path
+import threading
+import logging
 from .converter import PRESET_ICO_SIZES
+
+# MARK: define constants
 
 WINDOW_SIZE = (510, 400)
 BITMAP_SIZE = 48
 PRESETS = list(PRESET_ICO_SIZES.keys())
+
+# MARK: thread event
+
+myEVT_FILE_CONVERTED = wx.NewEventType()
+EVT_FILE_CONVERTED = wx.PyEventBinder(myEVT_FILE_CONVERTED, expectedIDs=1)
+
+class FileConvertedEvent(wx.ThreadEvent):
+    def __init__(self, file_name):
+        super().__init__(myEVT_FILE_CONVERTED)
+        self.SetString(file_name)
+
+# MARK: app instance
 
 class MainApp(wx.App):
     def __init__(self, preset: str, *args, **kw):
@@ -18,6 +34,8 @@ class MainApp(wx.App):
         self.frame = MainFrame(self.preset, None)
         self.frame.Show()
         return True
+
+# MARK: FileDropTarget implementation
 
 class FileDropTarget(wx.FileDropTarget):
     def __init__(self, window: 'MainFrame'):
@@ -32,35 +50,44 @@ class FileDropTarget(wx.FileDropTarget):
                 parent=self.window, 
                 style=wx.OK_DEFAULT|wx.ICON_ERROR, 
             )
-            return
+            return True
         self.window.preview_sizer.Clear(True)
-        for filename in filenames:
-            self.__convert(preset, filename)
+        th = threading.Thread(
+            target=self.__worker, 
+            args=(preset, filenames.copy()),
+            daemon=True, 
+        )
+        th.start()
+
         return True
     
+    def __worker(self, preset, filenames):
+        for filename in filenames:
+            self.__convert(preset, filename)
+
     def __convert(self, preset, filename):
         try:
             output = convert(preset, filename)
-            image = (Image.open(output)  # 1枚目(256x256)のみ読み込む
-                     .resize((BITMAP_SIZE, BITMAP_SIZE), Image.Resampling.LANCZOS)
-                     .convert('RGBA')
-            )
-            self.window.add_preview(_convert_image_to_bitmap(image))
+            event = FileConvertedEvent(output)
+            wx.QueueEvent(self.window, event)
         except Exception as excep:
-            wx.MessageBox(
-                f'Error occurred: {str(excep)}', 
-                parent=self.window, 
-                style=wx.OK_DEFAULT|wx.ICON_ERROR, 
-            )
+            logging.error(f'Error occurred in __convert method: {str(excep)}')
+            event = FileConvertedEvent('')
+            wx.QueueEvent(self.window, event)
+
+# MARK: main window
 
 class MainFrame(wx.Frame):
     def __init__(self, preset: str, *args, **kw):
         super().__init__(*args, **kw)
         base_path = Path(__file__).parent.resolve()
+        self.blank_bitmap = wx.Bitmap(BITMAP_SIZE, BITMAP_SIZE)
 
         self.SetSize(self.FromDIP(wx.Size(*WINDOW_SIZE)))
         self.SetTitle('svg2ico')
         self.SetIcon(wx.Icon(str(base_path / 'example.drawio.ico')))
+
+        self.Bind(EVT_FILE_CONVERTED, self.__on_file_converted)
 
         panel = wx.Panel(self)
         sizer = wx.FlexGridSizer(3, 1, gap=wx.Size(10, 10))
@@ -103,6 +130,18 @@ class MainFrame(wx.Frame):
             if self.preset_buttons[i].GetValue():
                 return i
         return None
+
+    def __on_file_converted(self, event):
+        file_name = event.GetString()
+        if file_name:
+            image = (Image.open(file_name)  # 1枚目のみ読み込む
+                        .resize((BITMAP_SIZE, BITMAP_SIZE), Image.Resampling.LANCZOS)
+                        .convert('RGBA')
+            )
+            self.add_preview(_convert_image_to_bitmap(image))
+        else:
+            self.add_preview(self.blank_bitmap)
+
 
 # MARK: private functions
 
