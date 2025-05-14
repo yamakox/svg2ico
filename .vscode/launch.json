@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch debugging Python",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "svg2ico",
+      "args": ["--preset", "favicon"],
+      "console": "integratedTerminal",
+      "autoReload": {
+        "enable": false,
+        "include": [
+          "**/*.py",
+          "**/*.pyw"
+        ] 
+      },
+      "justMyCode": true
+    }
+  ]
+}

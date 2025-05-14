@@ -1,36 +1,52 @@
 import wx
+import wx.lib.scrolledpanel as scrolled
 from .converter import convert
 from PIL import Image
 from pathlib import Path
+from .converter import PRESET_ICO_SIZES
 
-BITMAP_SIZE = 64
+WINDOW_SIZE = (510, 400)
+BITMAP_SIZE = 48
+PRESETS = list(PRESET_ICO_SIZES.keys())
 
 class MainApp(wx.App):
+    def __init__(self, preset: str, *args, **kw):
+        self.preset = preset
+        super().__init__(*args, **kw)
+
     def OnInit(self):
-        self.frame = MainFrame(None)
+        self.frame = MainFrame(self.preset, None)
         self.frame.Show()
         return True
 
 class FileDropTarget(wx.FileDropTarget):
-    def __init__(self, window):
+    def __init__(self, window: 'MainFrame'):
         super().__init__()
         self.window = window
 
     def OnDropFiles(self, x, y, filenames):
+        preset = self.window.get_selected_preset()
+        if not preset:
+            wx.MessageBox(
+                f'icon preset is not selected.', 
+                parent=self.window, 
+                style=wx.OK_DEFAULT|wx.ICON_ERROR, 
+            )
+            return
+        self.window.preview_sizer.Clear(True)
         for filename in filenames:
-            self.__convert(filename)
+            self.__convert(preset, filename)
         return True
     
-    def __convert(self, filename):
+    def __convert(self, preset, filename):
         try:
-            output = convert(filename)
+            output = convert(preset, filename)
             image = (Image.open(output)  # 1枚目(256x256)のみ読み込む
                      .resize((BITMAP_SIZE, BITMAP_SIZE), Image.Resampling.LANCZOS)
                      .convert('RGBA')
             )
-            self.window.preview.SetBitmap(_convert_image_to_bitmap(image))
+            self.window.add_preview(_convert_image_to_bitmap(image))
         except Exception as excep:
-            self.window.preview.SetBitmap(self.window.blank_bitmap)
             wx.MessageBox(
                 f'Error occurred: {str(excep)}', 
                 parent=self.window, 
@@ -38,29 +54,55 @@ class FileDropTarget(wx.FileDropTarget):
             )
 
 class MainFrame(wx.Frame):
-    def __init__(self, *args, **kw):
+    def __init__(self, preset: str, *args, **kw):
         super().__init__(*args, **kw)
-        self.blank_bitmap = wx.Bitmap(BITMAP_SIZE, BITMAP_SIZE)
         base_path = Path(__file__).parent.resolve()
 
-        self.SetSize(self.FromDIP(wx.Size(400, 300)))
+        self.SetSize(self.FromDIP(wx.Size(*WINDOW_SIZE)))
         self.SetTitle('svg2ico')
-        self.SetIcon(wx.Icon(str(base_path / 'example.ico')))
+        self.SetIcon(wx.Icon(str(base_path / 'example.drawio.ico')))
 
         panel = wx.Panel(self)
-        sizer = wx.FlexGridSizer(4, 1, wx.Size(10, 10))
-        sizer.AddGrowableRow(0)
-        sizer.AddGrowableRow(3)
+        sizer = wx.FlexGridSizer(3, 1, gap=wx.Size(10, 10))
+        sizer.AddGrowableRow(1)
         sizer.AddGrowableCol(0)
-        panel.SetSizer(sizer)
-        sizer.AddSpacer(0)  # 0行目
+
+        preset_panel = wx.Panel(panel)
+        preset_sizer = wx.GridSizer(1, len(PRESETS), gap=wx.Size(10, 10))
+        style = wx.RB_GROUP
+        self.preset_buttons: dict[str, wx.RadioButton] = {}
+        for i in PRESETS:
+            self.preset_buttons[i] = wx.RadioButton(preset_panel, label=i, style=style)
+            preset_sizer.Add(self.preset_buttons[i], flag=wx.ALIGN_CENTER)
+            style = 0
+        self.preset_buttons[preset].SetValue(True)
+        preset_panel.SetSizer(preset_sizer)
+        sizer.Add(preset_panel, flag=wx.TOP|wx.ALIGN_CENTER)     # 0行目
+
+        self.preview_panel = scrolled.ScrolledPanel(panel)
+        self.preview_panel.SetAutoLayout(True)
+        self.preview_sizer = wx.WrapSizer(wx.HORIZONTAL)
+        self.preview_panel.SetSizer(self.preview_sizer)
+        #self.preview = wx.StaticBitmap(panel, bitmap=self.blank_bitmap)
+        sizer.Add(self.preview_panel, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM)     # 1行目
+
         label = wx.StaticText(panel, label="Drag and drop a SVG file here")
-        sizer.Add(label, flag=wx.ALIGN_CENTER)      # 1行目
-        self.preview = wx.StaticBitmap(panel, bitmap=self.blank_bitmap)
-        sizer.Add(self.preview, flag=wx.ALIGN_CENTER)     # 2行目
-        sizer.AddSpacer(0)  # 3行目
+        sizer.Add(label, flag=wx.ALIGN_CENTER)      # 2行目
+
+        panel.SetSizerAndFit(sizer)
 
         panel.SetDropTarget(FileDropTarget(self))
+
+    def add_preview(self, bitmap: wx.Bitmap):
+        sb = wx.StaticBitmap(self.preview_panel, bitmap=bitmap)
+        self.preview_sizer.Add(sb, proportion=0, flag=wx.ALL, border=10)
+        self.preview_panel.SetupScrolling(scroll_x=True, scroll_y=True, scrollIntoView=True, scrollToTop=False)
+
+    def get_selected_preset(self) -> str:
+        for i in self.preset_buttons.keys():
+            if self.preset_buttons[i].GetValue():
+                return i
+        return None
 
 # MARK: private functions
 

@@ -34,9 +34,18 @@ Usage: svg2ico [OPTIONS]
   with a .ico extension.
 
 Options:
-  -i, --input TEXT   The input file name to convert to a Windows .ico file.
-  -o, --output TEXT  The output file name. If not provided, the input file
-                     name will be used with a .ico extension.
-  --version          Show the version and exit.
-  --help             Show this message and exit.
+  --preset [default|favicon]  The preset name of icon sizes.
+  -i, --input TEXT            The input file name to convert to a Windows .ico
+                              file.
+  -o, --output TEXT           The output file name. If not provided, the input
+                              file name will be used with a .ico extension.
+  --version                   Show the version and exit.
+  --help                      Show this message and exit.
 ```
+
+`--preset` option selects the series of the icon sizes.
+
+|preset|icon sizes|
+|---|---|
+|default|256, 128, 64, 48, 32, 24, 16|
+|favicon|48, 32, 16|

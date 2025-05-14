@@ -36,5 +36,9 @@ svg2ico = "svg2ico:main"
 [tool.poetry.requires-plugins]
 poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
 
+# HowTo: poetry add debugpy --group dev && poetry install --with dev
+[tool.poetry.group.dev.dependencies]
+debugpy = "^1.8.14"
+
 [tool.poetry-dynamic-versioning]
 enable = true
