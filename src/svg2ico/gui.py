@@ -69,11 +69,11 @@ class FileDropTarget(wx.FileDropTarget):
         try:
             output = convert(preset, filename)
             event = FileConvertedEvent(output)
-            wx.QueueEvent(self.window, event)
+            wx.QueueEvent(self.window, event.Clone())
         except Exception as excep:
             logging.error(f'Error occurred in __convert method: {str(excep)}')
             event = FileConvertedEvent('')
-            wx.QueueEvent(self.window, event)
+            wx.QueueEvent(self.window, event.Clone())
 
 # MARK: main window
 
@@ -141,7 +141,6 @@ class MainFrame(wx.Frame):
             self.add_preview(_convert_image_to_bitmap(image))
         else:
             self.add_preview(self.blank_bitmap)
-
 
 # MARK: private functions
 
