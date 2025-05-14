@@ -9,7 +9,7 @@ from .converter import PRESET_ICO_SIZES
 
 # MARK: define constants
 
-WINDOW_SIZE = (510, 400)
+WINDOW_SIZE = (510, 320)
 BITMAP_SIZE = 48
 PRESETS = list(PRESET_ICO_SIZES.keys())
 
@@ -113,7 +113,7 @@ class MainFrame(wx.Frame):
         #self.preview = wx.StaticBitmap(panel, bitmap=self.blank_bitmap)
         sizer.Add(self.preview_panel, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM)     # 1行目
 
-        label = wx.StaticText(panel, label="Drag and drop a SVG file here")
+        label = wx.StaticText(panel, label="Drag and drop SVG files here")
         sizer.Add(label, flag=wx.ALIGN_CENTER)      # 2行目
 
         panel.SetSizerAndFit(sizer)

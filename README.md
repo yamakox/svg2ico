@@ -16,6 +16,8 @@ To run as GUI application:
 svg2ico
 ```
 
+![3 files are converted](./screenshot.png)
+
 To run as console application:
 
 ```bash
