@@ -104,7 +104,7 @@ class MainFrame(wx.Frame):
             style = 0
         self.preset_buttons[preset].SetValue(True)
         preset_panel.SetSizer(preset_sizer)
-        sizer.Add(preset_panel, flag=wx.TOP|wx.ALIGN_CENTER)     # 0行目
+        sizer.Add(preset_panel, flag=wx.TOP|wx.ALIGN_CENTER|wx.BOTTOM, border=8)     # 0行目
 
         self.preview_panel = scrolled.ScrolledPanel(panel)
         self.preview_panel.SetAutoLayout(True)
@@ -114,13 +114,13 @@ class MainFrame(wx.Frame):
         sizer.Add(self.preview_panel, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM)     # 1行目
 
         label = wx.StaticText(panel, label="Drag and drop SVG files here")
-        sizer.Add(label, flag=wx.ALIGN_CENTER)      # 2行目
+        sizer.Add(label, flag=wx.TOP|wx.ALIGN_CENTER|wx.BOTTOM, border=8)      # 2行目
 
         panel.SetSizerAndFit(sizer)
 
         panel.SetDropTarget(FileDropTarget(self))
 
-    def add_preview(self, bitmap: wx.Bitmap):
+    def add_thumbnail(self, bitmap: wx.Bitmap):
         sb = wx.StaticBitmap(self.preview_panel, bitmap=bitmap)
         self.preview_sizer.Add(sb, proportion=0, flag=wx.ALL, border=10)
         self.preview_panel.SetupScrolling(scroll_x=True, scroll_y=True, scrollIntoView=True, scrollToTop=False)
@@ -138,9 +138,9 @@ class MainFrame(wx.Frame):
                         .resize((BITMAP_SIZE, BITMAP_SIZE), Image.Resampling.LANCZOS)
                         .convert('RGBA')
             )
-            self.add_preview(_convert_image_to_bitmap(image))
+            self.add_thumbnail(_convert_image_to_bitmap(image))
         else:
-            self.add_preview(self.blank_bitmap)
+            self.add_thumbnail(self.blank_bitmap)
 
 # MARK: private functions
 
