@@ -24,9 +24,11 @@ def convert(preset: str, input: str, output: str|None=None) -> str:
         The path to the output ICO file.
     '''
     if preset not in PRESET_ICO_SIZES:
-        raise Exception(f'Invalid icon preset: {preset}')
+        raise ValueError('Invalid icon preset: ' + preset)
     
     input_path = Path(input)
+    if not input_path.is_file():
+        raise ValueError('Invalid input file name: ' + str(input_path))
     output_path = Path(output) if output else input_path.with_suffix('.ico')
     
     if input_path.suffix.lower() == '.svg':

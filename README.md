@@ -4,13 +4,15 @@
 
 ## HOW TO USE
 
-To install:
+### Installation
+
+From GitHub:
 
 ```bash
 pip3 install git+https://github.com/yamakox/svg2ico.git
 ```
 
-To run as GUI application:
+### Run as GUI application
 
 ```bash
 svg2ico
@@ -18,7 +20,7 @@ svg2ico
 
 ![3 files are converted](./screenshot.png)
 
-To run as console application:
+### Run as console application
 
 ```bash
 svg2ico -i example.svg -o icon.ico
@@ -51,3 +53,34 @@ Options:
 |---|---|
 |default|256, 128, 64, 48, 32, 24, 16|
 |favicon|48, 32, 16|
+
+### Use from script
+
+```python
+import svg2ico
+svg2ico.convert('favicon', input_svg_file_path, output_ico_file_path)
+```
+
+function:
+
+```python
+def convert(
+    preset: str,
+    input: str,
+    output: str | None = None
+) -> str
+```
+
+docstring:
+
+```docstring
+Convert a SVG file to an ICO file.
+
+Args:
+    preset (str): The preset name of icon sizes defined by PRESET_ICO_SIZES.
+    input (str): The path to the SVG file to convert. You can also pass the path of the other image format file.
+    output (str|None): The path to the output ICO file. If not provided, the input file name will be used.
+
+Returns:
+    The path to the output ICO file.
+```
