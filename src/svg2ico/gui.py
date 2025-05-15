@@ -5,6 +5,7 @@ from PIL import Image
 from pathlib import Path
 import threading
 import logging
+from importlib.metadata import version, metadata
 from .converter import PRESET_ICO_SIZES
 
 # MARK: define constants
@@ -12,6 +13,7 @@ from .converter import PRESET_ICO_SIZES
 WINDOW_SIZE = (510, 320)
 BITMAP_SIZE = 48
 PRESETS = list(PRESET_ICO_SIZES.keys())
+PACKAGE_NAME = metadata(__package__).get('Name')
 
 # MARK: thread event
 
@@ -78,13 +80,12 @@ class FileDropTarget(wx.FileDropTarget):
 # MARK: main window
 
 class MainFrame(wx.Frame):
-    def __init__(self, preset: str, *args, **kw):
-        super().__init__(*args, **kw)
+    def __init__(self, preset: str, parent: wx.Window|None = None, *args, **kw):
+        super().__init__(parent=parent, title=f'{PACKAGE_NAME} v{version(PACKAGE_NAME)}', *args, **kw)
         base_path = Path(__file__).parent.resolve()
         self.blank_bitmap = wx.Bitmap(BITMAP_SIZE, BITMAP_SIZE)
 
         self.SetSize(self.FromDIP(wx.Size(*WINDOW_SIZE)))
-        self.SetTitle('svg2ico')
         self.SetIcon(wx.Icon(str(base_path / 'example.drawio.ico')))
 
         self.Bind(EVT_FILE_CONVERTED, self.__on_file_converted)
