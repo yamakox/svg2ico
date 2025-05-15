@@ -23,15 +23,18 @@ dependencies = [
     "click (>=8.2.0,<9.0.0)"
 ]
 
+[project.scripts]
+svg2ico = "svg2ico:main"
+
+[project.gui-scripts]
+svg2icow = "svg2ico:main"
+
 [build-system]
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
 build-backend = "poetry_dynamic_versioning.backend"
 
 [tool.poetry]
 version = "0.0.0"
-
-[tool.poetry.scripts]
-svg2ico = "svg2ico:main"
 
 [tool.poetry.requires-plugins]
 poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
