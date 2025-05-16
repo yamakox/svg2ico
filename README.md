@@ -15,12 +15,6 @@ pip3 install git+https://github.com/yamakox/svg2ico.git
 ### Run as GUI application
 
 ```bash
-svg2icow
-```
-
-You can also use the following command, but it will open the console on Windows.
-
-```bash
 svg2ico
 ```
 
