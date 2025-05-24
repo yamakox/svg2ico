@@ -7,6 +7,13 @@ import re
 PRESET_ICO_SIZES = dict(
     default=[256, 128, 64, 48, 32, 24, 16], 
     favicon=[48, 32, 16], 
+    icns=[512, 256, 128, 64, 32, 16],
+)
+
+PRESET_ICO_FORMATS = dict(
+    default='ICO', 
+    favicon='ICO', 
+    icns='ICNS',
 )
 
 # MARK: public functions
@@ -18,10 +25,10 @@ def convert(preset: str, input: str, output: str|None=None) -> str:
     Args:
         preset (str): The preset name of icon sizes defined by PRESET_ICO_SIZES.
         input (str): The path to the SVG file to convert. You can also pass the path of the other image format file.
-        output (str|None): The path to the output ICO file. If not provided, the input file name will be used.
+        output (str|None): The path to the output ICO or ICNS file. If not provided, the input file name will be used.
     
     Returns:
-        The path to the output ICO file.
+        The path to the output ICO or ICNS file.
     '''
     if preset not in PRESET_ICO_SIZES:
         raise ValueError('Invalid icon preset: ' + preset)
@@ -29,7 +36,23 @@ def convert(preset: str, input: str, output: str|None=None) -> str:
     input_path = Path(input)
     if not input_path.is_file():
         raise ValueError('Invalid input file name: ' + str(input_path))
-    output_path = Path(output) if output else input_path.with_suffix('.ico')
+    if output:
+        output_path = Path(output)
+        suffix = output_path.suffix.lower()
+        try:
+            match suffix:
+                case '.ico':
+                    if preset not in ['default', 'favicon']:
+                        raise Exception()
+                case '.icns':
+                    if preset != 'icns':
+                        raise Exception()
+                case _:
+                    raise Exception()
+        except:
+            raise ValueError('Invalid output file name: ' + str(output_path))
+    else:
+        output_path = input_path.with_suffix('.ico' if preset != 'icns' else '.icns')
     
     if input_path.suffix.lower() == '.svg':
         png_data = cairosvg.svg2png(bytestring=_read_svg(input_path))
@@ -37,13 +60,15 @@ def convert(preset: str, input: str, output: str|None=None) -> str:
     else:
         image = Image.open(input_path)
     
-    _make_ico(PRESET_ICO_SIZES[preset], image, output_path)
+    _make_ico(preset, image, output_path)
     return str(output_path)
 
 
 # MARK: private functions
 
-def _make_ico(icon_sizes: list[int], orig_image: Image, output_path: Path):
+def _make_ico(preset: str, orig_image: Image, output_path: Path):
+    icon_sizes = PRESET_ICO_SIZES[preset]
+    format = PRESET_ICO_FORMATS[preset]
     w, h = orig_image.size
     if w == h:
         image = orig_image
@@ -58,7 +83,7 @@ def _make_ico(icon_sizes: list[int], orig_image: Image, output_path: Path):
         images.append(image.resize((size, size), Image.Resampling.LANCZOS))
     images[0].save(
         output_path,
-        format='ICO',
+        format=format,
         append_images=images[1:],
     )
 
